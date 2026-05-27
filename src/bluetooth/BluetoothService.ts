@@ -3,7 +3,6 @@ import RNBluetoothClassic, {
   BluetoothEventSubscription,
 } from 'react-native-bluetooth-classic';
 import { BluetoothDevice } from '../types/bluetooth';
-import { Constants } from '../utils/constants';
 
 class BluetoothService {
   private static instance: BluetoothService;
@@ -179,7 +178,7 @@ class BluetoothService {
       id: device.address,
       name: device.name,
       address: device.address,
-      bonded: device.bonded,
+      bonded: Boolean(device.bonded),
       connected: false
     };
   }

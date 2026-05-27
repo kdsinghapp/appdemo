@@ -1,88 +1,92 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { BluetoothDevice } from '../types/bluetooth';
-import { Colors } from '../utils/colors';
+import { useAppTheme } from '../hooks/useAppTheme';
+import { AnimatedPressable } from './AnimatedPressable';
+import { Avatar } from './Avatar';
+import { StatusPill } from './StatusPill';
 
 interface DeviceCardProps {
   device: BluetoothDevice;
   onPress: (device: BluetoothDevice) => void;
   disabled?: boolean;
+  caption?: string;
 }
 
-export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onPress, disabled }) => {
-  const isDark = useColorScheme() === 'dark';
+export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onPress, disabled, caption }) => {
+  const { colors } = useAppTheme();
+  const connected = Boolean(device.connected);
 
   return (
-    <TouchableOpacity
-      style={[styles.container, { backgroundColor: isDark ? Colors.cardDark : Colors.card, borderColor: isDark ? Colors.borderDark : Colors.border }]}
+    <AnimatedPressable
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: colors.shadow,
+          opacity: disabled ? 0.55 : 1,
+        },
+      ]}
       onPress={() => onPress(device)}
       disabled={disabled}
-      activeOpacity={0.7}
+      accessibilityRole="button"
     >
-      <View style={[styles.iconContainer, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]}>
-        <Icon name={device.bonded ? "bluetooth-connected" : "bluetooth"} size={24} color={device.bonded ? Colors.primary : (isDark ? Colors.textDark : Colors.text)} />
-      </View>
+      <Avatar name={device.name} icon="devices" online={connected} size={52} />
       <View style={styles.infoContainer}>
-        <Text style={[styles.name, { color: isDark ? Colors.textDark : Colors.text }]} numberOfLines={1}>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
           {device.name || 'Unknown Device'}
         </Text>
-        <Text style={[styles.address, { color: isDark ? Colors.textMutedDark : Colors.textMuted }]}>
-          {device.address}
-        </Text>
-      </View>
-      {device.connected && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Connected</Text>
+        <View style={styles.metaRow}>
+          <Icon name={device.bonded ? 'verified' : 'bluetooth'} size={14} color={colors.textMuted} />
+          <Text style={[styles.address, { color: colors.textMuted }]} numberOfLines={1}>
+            {caption || device.address}
+          </Text>
         </View>
+      </View>
+      {connected ? (
+        <StatusPill label="Online" tone="success" />
+      ) : device.bonded ? (
+        <StatusPill label="Paired" tone="neutral" />
+      ) : (
+        <Icon name="chevron-right" size={24} color={colors.textMuted} />
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    marginVertical: 6,
-    marginHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 1,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    elevation: 2,
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 10,
+    padding: 14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
   },
   infoContainer: {
     flex: 1,
-    marginLeft: 12,
+    minWidth: 0,
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontWeight: '800',
+  },
+  metaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 6,
   },
   address: {
-    fontSize: 13,
-  },
-  badge: {
-    backgroundColor: Colors.success,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

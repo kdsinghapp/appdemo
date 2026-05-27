@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Colors } from '../utils/colors';
+import { useAppTheme } from '../hooks/useAppTheme';
 
 interface EmptyStateProps {
   icon: string;
@@ -10,52 +10,67 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}>
-      <View style={[styles.iconContainer, { backgroundColor: isDark ? Colors.cardDark : Colors.card }]}>
-        <Icon name={icon} size={64} color={Colors.primary} />
+    <View style={styles.container}>
+      <View style={[styles.illustration, { backgroundColor: colors.primarySoft }]}>
+        <View style={[styles.spark, styles.sparkOne, { backgroundColor: colors.accentSoft }]} />
+        <View style={[styles.spark, styles.sparkTwo, { backgroundColor: colors.surface }]} />
+        <Icon name={icon} size={54} color={colors.primary} />
       </View>
-      <Text style={[styles.title, { color: isDark ? Colors.textDark : Colors.text }]}>
-        {title}
-      </Text>
-      <Text style={[styles.message, { color: isDark ? Colors.textMutedDark : Colors.textMuted }]}>
-        {message}
-      </Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.message, { color: colors.textMuted }]}>{message}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 32,
   },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
+  illustration: {
     alignItems: 'center',
+    borderRadius: 44,
+    height: 128,
+    justifyContent: 'center',
     marginBottom: 24,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    overflow: 'hidden',
+    width: 128,
+  },
+  spark: {
+    position: 'absolute',
+  },
+  sparkOne: {
+    borderRadius: 28,
+    height: 56,
+    right: -10,
+    top: 14,
+    width: 56,
+  },
+  sparkTwo: {
+    borderRadius: 18,
+    bottom: 18,
+    height: 36,
+    left: 14,
+    opacity: 0.75,
+    width: 36,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 21,
+    fontWeight: '800',
+    letterSpacing: 0,
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 22,
+    maxWidth: 310,
     textAlign: 'center',
-    lineHeight: 24,
   },
 });

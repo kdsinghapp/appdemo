@@ -1,43 +1,83 @@
-import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { Message } from '../types/message';
 import { formatTime } from '../utils/helpers';
-import { Colors } from '../utils/colors';
+import { useAppTheme } from '../hooks/useAppTheme';
 
 interface ChatBubbleProps {
   message: Message;
 }
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
-  const isDark = useColorScheme() === 'dark';
+  const { width } = useWindowDimensions();
+  const { colors, isDark } = useAppTheme();
   const { isSender, text, timestamp } = message;
+  const translateY = useSharedValue(10);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 220 });
+    translateY.value = withDelay(40, withSpring(0, { damping: 18, stiffness: 180 }));
+  }, [opacity, translateY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
 
   return (
-    <View style={[styles.container, isSender ? styles.senderContainer : styles.receiverContainer]}>
+    <Animated.View
+      style={[
+        styles.container,
+        isSender ? styles.senderContainer : styles.receiverContainer,
+        animatedStyle,
+      ]}
+    >
       <View
         style={[
           styles.bubble,
-          isSender
-            ? { backgroundColor: isDark ? Colors.bubbleRightDark : Colors.bubbleRight }
-            : { backgroundColor: isDark ? Colors.bubbleLeftDark : Colors.bubbleLeft },
+          {
+            backgroundColor: isSender ? colors.bubbleRight : colors.bubbleLeft,
+            borderColor: isSender ? 'transparent' : colors.border,
+            maxWidth: Math.min(width * 0.78, 420),
+            shadowColor: colors.shadow,
+          },
+          isSender ? styles.senderBubble : styles.receiverBubble,
         ]}
       >
-        <Text style={[styles.text, { color: isDark ? Colors.textDark : Colors.text }]}>
+        <Text style={[styles.text, { color: isSender && isDark ? '#FFFFFF' : colors.text }]}>
           {text}
         </Text>
-        <Text style={[styles.time, { color: isDark ? Colors.textMutedDark : Colors.textMuted }]}>
-          {formatTime(timestamp)}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={[styles.time, { color: isSender && isDark ? 'rgba(255,255,255,0.72)' : colors.textMuted }]}>
+            {formatTime(timestamp)}
+          </Text>
+          {isSender && (
+            <Icon
+              name="done-all"
+              size={15}
+              color={isDark ? 'rgba(255,255,255,0.75)' : colors.primary}
+            />
+          )}
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 4,
-    marginHorizontal: 12,
     flexDirection: 'row',
+    marginHorizontal: 14,
+    marginVertical: 4,
   },
   senderContainer: {
     justifyContent: 'flex-end',
@@ -46,24 +86,37 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   bubble: {
-    maxWidth: '80%',
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 4,
-    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
+    paddingHorizontal: 13,
+    paddingTop: 9,
+    paddingBottom: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  senderBubble: {
+    borderBottomRightRadius: 8,
+    borderRadius: 20,
+  },
+  receiverBubble: {
+    borderBottomLeftRadius: 8,
+    borderRadius: 20,
   },
   text: {
     fontSize: 16,
+    fontWeight: '500',
     lineHeight: 22,
+  },
+  metaRow: {
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 5,
   },
   time: {
     fontSize: 11,
-    alignSelf: 'flex-end',
-    marginTop: 4,
+    fontWeight: '700',
   },
 });

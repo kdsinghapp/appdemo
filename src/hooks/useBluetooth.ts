@@ -51,6 +51,30 @@ export const useBluetooth = () => {
     }
   }, []);
 
+  // Accept incoming connections (server mode)
+  const startAccepting = useCallback(async () => {
+    if (isAccepting.current) return;
+    isAccepting.current = true;
+
+    try {
+      const device = await BluetoothService.acceptConnection();
+      if (device) {
+        setConnectionState(ConnectionState.CONNECTED);
+        setConnectedDevice({
+          id: device.address,
+          name: device.name || 'Unknown Device',
+          address: device.address,
+          bonded: Boolean(device.bonded),
+          connected: true,
+        });
+      }
+    } catch (e) {
+      // Accept was cancelled or failed, that's ok
+      console.log('Accept ended', e);
+    }
+    isAccepting.current = false;
+  }, []);
+
   // Connect as client to a device
   const connect = useCallback(async (device: BluetoothDevice) => {
     try {
@@ -79,7 +103,7 @@ export const useBluetooth = () => {
       startAccepting();
       return false;
     }
-  }, []);
+  }, [startAccepting]);
 
   // Disconnect from current device
   const disconnect = useCallback(async () => {
@@ -95,31 +119,7 @@ export const useBluetooth = () => {
       // Resume accepting
       startAccepting();
     }
-  }, [connectedDevice]);
-
-  // Accept incoming connections (server mode)
-  const startAccepting = useCallback(async () => {
-    if (isAccepting.current) return;
-    isAccepting.current = true;
-
-    try {
-      const device = await BluetoothService.acceptConnection();
-      if (device) {
-        setConnectionState(ConnectionState.CONNECTED);
-        setConnectedDevice({
-          id: device.address,
-          name: device.name || 'Unknown Device',
-          address: device.address,
-          bonded: device.bonded || false,
-          connected: true,
-        });
-      }
-    } catch (e) {
-      // Accept was cancelled or failed, that's ok
-      console.log('Accept ended', e);
-    }
-    isAccepting.current = false;
-  }, []);
+  }, [connectedDevice, startAccepting]);
 
   // Initialize on mount
   useEffect(() => {
@@ -157,7 +157,7 @@ export const useBluetooth = () => {
       BluetoothService.cancelAccept();
       isAccepting.current = false;
     };
-  }, []);
+  }, [checkBluetoothState, getBonded, startAccepting]);
 
   // Combine paired + discovered for convenience
   const allDevices = useCallback(() => {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Colors } from '../utils/colors';
+import { useAppTheme } from '../hooks/useAppTheme';
+import { AnimatedPressable } from './AnimatedPressable';
 
 interface MessageInputProps {
   onSend: (text: string) => void;
@@ -10,73 +11,100 @@ interface MessageInputProps {
 
 export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = false }) => {
   const [text, setText] = useState('');
-  const isDark = useColorScheme() === 'dark';
+  const { colors } = useAppTheme();
+  const canSend = text.trim().length > 0 && !disabled;
 
   const handleSend = () => {
-    if (text.trim() && !disabled) {
+    if (canSend) {
       onSend(text.trim());
       setText('');
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? Colors.backgroundDark : Colors.background }]}>
-      <View style={[styles.inputContainer, { backgroundColor: isDark ? Colors.cardDark : Colors.card }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.input }]}>
+        <AnimatedPressable style={styles.smallButton} disabled={disabled} accessibilityRole="button">
+          <Icon name="mood" size={23} color={colors.textMuted} />
+        </AnimatedPressable>
         <TextInput
-          style={[styles.input, { color: isDark ? Colors.textDark : Colors.text }]}
-          placeholder="Message"
-          placeholderTextColor={isDark ? Colors.textMutedDark : Colors.textMuted}
+          style={[styles.input, { color: colors.text }]}
+          placeholder={disabled ? 'Reconnect to send messages' : 'Message'}
+          placeholderTextColor={colors.textMuted}
           multiline
           value={text}
           onChangeText={setText}
           editable={!disabled}
+          selectionColor={colors.primary}
+          maxLength={1000}
         />
+        <AnimatedPressable style={styles.smallButton} disabled={disabled} accessibilityRole="button">
+          <Icon name="attach-file" size={22} color={colors.textMuted} />
+        </AnimatedPressable>
       </View>
-      <TouchableOpacity
+      <AnimatedPressable
         style={[
           styles.sendButton,
-          { backgroundColor: text.trim() && !disabled ? Colors.primary : (isDark ? Colors.cardDark : '#B0BEC5') }
+          {
+            backgroundColor: canSend ? colors.primary : colors.input,
+            shadowColor: colors.primary,
+          },
         ]}
         onPress={handleSend}
-        disabled={!text.trim() || disabled}
+        disabled={!canSend}
+        pressedScale={0.9}
+        accessibilityRole="button"
       >
-        <Icon name="send" size={20} color="#FFF" />
-      </TouchableOpacity>
+        <Icon name="send" size={20} color={canSend ? '#FFFFFF' : colors.textMuted} />
+      </AnimatedPressable>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
   },
   inputContainer: {
+    alignItems: 'flex-end',
+    borderRadius: 25,
     flex: 1,
-    borderRadius: 24,
-    marginRight: 8,
-    minHeight: 48,
-    maxHeight: 120,
+    flexDirection: 'row',
+    minHeight: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  smallButton: {
+    alignItems: 'center',
+    height: 40,
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 36,
   },
   input: {
+    flex: 1,
     fontSize: 16,
-    maxHeight: 100,
+    fontWeight: '500',
+    lineHeight: 21,
+    maxHeight: 112,
+    minHeight: 40,
+    paddingHorizontal: 4,
+    paddingVertical: 9,
   },
   sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    borderRadius: 25,
+    elevation: 3,
+    height: 50,
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
-    shadowRadius: 1.5,
+    shadowRadius: 14,
+    width: 50,
   },
 });

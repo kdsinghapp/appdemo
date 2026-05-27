@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Colors } from '../utils/colors';
+import { useAppTheme } from '../hooks/useAppTheme';
+import { AnimatedPressable } from './AnimatedPressable';
+import { Avatar } from './Avatar';
 
 interface HeaderProps {
   title: string;
@@ -9,6 +11,11 @@ interface HeaderProps {
   onBack?: () => void;
   rightIcon?: string;
   onRightPress?: () => void;
+  secondRightIcon?: string;
+  onSecondRightPress?: () => void;
+  avatarName?: string | null;
+  avatarIcon?: string;
+  online?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,62 +24,92 @@ export const Header: React.FC<HeaderProps> = ({
   onBack,
   rightIcon,
   onRightPress,
+  secondRightIcon,
+  onSecondRightPress,
+  avatarName,
+  avatarIcon,
+  online,
 }) => {
-  const isDark = useColorScheme() === 'dark';
-  
+  const { colors } = useAppTheme();
+
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? Colors.cardDark : Colors.primary }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <View style={styles.leftContainer}>
         {onBack && (
-          <TouchableOpacity style={styles.iconButton} onPress={onBack}>
-            <Icon name="arrow-back" size={24} color="#FFF" />
-          </TouchableOpacity>
+          <AnimatedPressable style={styles.iconButton} onPress={onBack} accessibilityRole="button">
+            <Icon name="arrow-back" size={23} color={colors.text} />
+          </AnimatedPressable>
+        )}
+        {(avatarName !== undefined || avatarIcon) && (
+          <Avatar name={avatarName} icon={avatarIcon} online={online} size={42} />
         )}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
         </View>
       </View>
-      {rightIcon && onRightPress && (
-        <TouchableOpacity style={styles.iconButton} onPress={onRightPress}>
-          <Icon name={rightIcon} size={24} color="#FFF" />
-        </TouchableOpacity>
-      )}
+
+      <View style={styles.actions}>
+        {secondRightIcon && onSecondRightPress && (
+          <AnimatedPressable style={styles.iconButton} onPress={onSecondRightPress} accessibilityRole="button">
+            <Icon name={secondRightIcon} size={22} color={colors.text} />
+          </AnimatedPressable>
+        )}
+        {rightIcon && onRightPress && (
+          <AnimatedPressable style={styles.iconButton} onPress={onRightPress} accessibilityRole="button">
+            <Icon name={rightIcon} size={22} color={colors.text} />
+          </AnimatedPressable>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    minHeight: 68,
+    paddingHorizontal: 12,
   },
   leftContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: 10,
+    minWidth: 0,
   },
   iconButton: {
-    padding: 8,
+    alignItems: 'center',
+    borderRadius: 22,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
   },
   titleContainer: {
-    marginLeft: 8,
+    flex: 1,
+    minWidth: 0,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: '800',
+    letterSpacing: 0,
   },
   subtitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  actions: {
+    alignItems: 'center',
+    flexDirection: 'row',
   },
 });
